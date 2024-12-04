@@ -10,7 +10,7 @@ This project demonstrates a web-based, resizable terminal interface built using 
 - **Customizable appearance**: Styled with `xterm.js` and CSS for a modern terminal look.
 - **Cross-platform support**: Works with Bash on Unix-like systems and `cmd.exe` on Windows.
 
-![ Terminal ](https://github.com/Akt-AI/HTML-Terminal-app/blob/main/out.png)
+![Terminal](out.png)
 ---
 
 ## How It Works
