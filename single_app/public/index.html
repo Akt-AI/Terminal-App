@@ -16,7 +16,6 @@
       align-items: center;
       height: 100vh;
     }
-
     .terminal-container {
       display: flex;
       flex-direction: column;
@@ -32,7 +31,6 @@
       resize: both;
       overflow: hidden;
     }
-
     .header {
       background-color: #333;
       padding: 10px 20px;
@@ -44,23 +42,19 @@
       user-select: none;
       cursor: move;
     }
-
     .header span {
       color: #00ff00;
     }
-
     #xterm-container {
       flex: 1;
       padding: 0;
     }
-
     .input-container {
       display: flex;
       align-items: center;
       padding: 10px;
       background-color: #333;
     }
-
     .input-container input {
       flex: 1;
       border: none;
@@ -71,11 +65,9 @@
       background-color: #1e1e1e;
       color: #d4d4d4;
     }
-
     .input-container input::placeholder {
       color: #666;
     }
-
     .input-container button {
       margin-left: 10px;
       padding: 8px 16px;
@@ -87,7 +79,6 @@
       cursor: pointer;
       transition: background-color 0.3s;
     }
-
     .input-container button:hover {
       background-color: #00cc00;
     }
@@ -105,12 +96,8 @@
       <button id="send-button">Send</button>
     </div>
   </div>
-
   <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
   <script>
-    // Establish WebSocket connection to Streamlit server
-    // const ws = new WebSocket("ws://localhost:5000");
-
     const terminalContainer = document.getElementById("xterm-container");
     const input = document.getElementById("input");
     const sendButton = document.getElementById("send-button");
@@ -130,7 +117,7 @@
     terminal.open(terminalContainer);
 
     // Establish WebSocket connection
-    const ws = new WebSocket("ws://localhost:5000");
+    const ws = new WebSocket(`ws://${location.host}`);
 
     ws.onopen = () => {
       terminal.writeln("\x1b[32mConnected to server\x1b[0m");
@@ -180,30 +167,7 @@
     });
 
     resizeObserver.observe(resizableTerminal);
-
-    // Dragging functionality
-    const header = document.querySelector(".header");
-    let isDragging = false;
-    let offsetX = 0;
-    let offsetY = 0;
-
-    header.addEventListener("mousedown", (e) => {
-      isDragging = true;
-      offsetX = e.clientX - resizableTerminal.offsetLeft;
-      offsetY = e.clientY - resizableTerminal.offsetTop;
-    });
-
-    document.addEventListener("mousemove", (e) => {
-      if (isDragging) {
-        resizableTerminal.style.left = `${e.clientX - offsetX}px`;
-        resizableTerminal.style.top = `${e.clientY - offsetY}px`;
-        resizableTerminal.style.position = "absolute";
-      }
-    });
-
-    document.addEventListener("mouseup", () => {
-      isDragging = false;
-    });
   </script>
 </body>
 </html>
+
