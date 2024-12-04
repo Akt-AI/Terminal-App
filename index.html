@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resizable Fancy Terminal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1e1e1e;
+      font-family: "Courier New", Courier, monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .terminal-container {
+      display: flex;
+      flex-direction: column;
+      width: 80%;
+      max-width: 800px;
+      height: 70%;
+      min-height: 400px;
+      min-width: 500px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background-color: #000;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+      resize: both;
+      overflow: hidden;
+    }
+
+    .header {
+      background-color: #333;
+      padding: 10px 20px;
+      color: #fff;
+      font-size: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      cursor: move;
+    }
+
+    .header span {
+      color: #00ff00;
+    }
+
+    #xterm-container {
+      flex: 1;
+      padding: 0;
+    }
+
+    .input-container {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background-color: #333;
+    }
+
+    .input-container input {
+      flex: 1;
+      border: none;
+      border-radius: 4px;
+      padding: 8px;
+      font-size: 14px;
+      outline: none;
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+    }
+
+    .input-container input::placeholder {
+      color: #666;
+    }
+
+    .input-container button {
+      margin-left: 10px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background-color: #00ff00;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .input-container button:hover {
+      background-color: #00cc00;
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal-container" id="terminal-container">
+    <div class="header">
+      <div>Resizable Fancy Terminal</div>
+      <div>Status: <span id="status">Connecting...</span></div>
+    </div>
+    <div id="xterm-container"></div>
+    <div class="input-container">
+      <input id="input" type="text" placeholder="Type your command here..." autofocus />
+      <button id="send-button">Send</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+  <script>
+    const terminalContainer = document.getElementById("xterm-container");
+    const input = document.getElementById("input");
+    const sendButton = document.getElementById("send-button");
+    const status = document.getElementById("status");
+    const resizableTerminal = document.getElementById("terminal-container");
+
+    // Initialize xterm.js terminal
+    const terminal = new Terminal({
+      theme: {
+        background: "#000",
+        foreground: "#fff",
+      },
+      cursorBlink: true,
+      fontSize: 14,
+      fontFamily: "Courier New, monospace",
+    });
+    terminal.open(terminalContainer);
+
+    // Establish WebSocket connection
+    const ws = new WebSocket("ws://localhost:5000");
+
+    ws.onopen = () => {
+      terminal.writeln("\x1b[32mConnected to server\x1b[0m");
+      status.textContent = "Connected";
+      status.style.color = "#00ff00";
+    };
+
+    ws.onmessage = (event) => {
+      terminal.write(event.data);
+    };
+
+    ws.onclose = () => {
+      terminal.writeln("\x1b[31mConnection closed\x1b[0m");
+      status.textContent = "Disconnected";
+      status.style.color = "#ff5555";
+    };
+
+    ws.onerror = () => {
+      terminal.writeln("\x1b[31mWebSocket error\x1b[0m");
+      status.textContent = "Error";
+      status.style.color = "#ff5555";
+    };
+
+    // Send input from terminal to server
+    terminal.onData((data) => {
+      ws.send(data);
+    });
+
+    // Send input from text box to server
+    sendButton.addEventListener("click", sendMessage);
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    });
+
+    function sendMessage() {
+      if (input.value.trim()) {
+        ws.send(input.value + "\n");
+        input.value = "";
+      }
+    }
+
+    // Handle resizing
+    let resizeObserver = new ResizeObserver(() => {
+      terminal.fit();
+    });
+
+    resizeObserver.observe(resizableTerminal);
+
+    // Dragging functionality
+    const header = document.querySelector(".header");
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    header.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      offsetX = e.clientX - resizableTerminal.offsetLeft;
+      offsetY = e.clientY - resizableTerminal.offsetTop;
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (isDragging) {
+        resizableTerminal.style.left = `${e.clientX - offsetX}px`;
+        resizableTerminal.style.top = `${e.clientY - offsetY}px`;
+        resizableTerminal.style.position = "absolute";
+      }
+    });
+
+    document.addEventListener("mouseup", () => {
+      isDragging = false;
+    });
+  </script>
+</body>
+</html>
